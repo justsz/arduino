@@ -28,7 +28,7 @@ int moveBack(int a) {
 //dir: 1 - up, 2 - right, 3 - down, 4 - left
 void updateSnake(int dir) {
 	int headPos[4];
-	memcpy(&snake[0], &headPos, sizeof(headPos));
+	memcpy(&headPos, &snake[0], sizeof(headPos));
 	
 	//copy previous xy position of head
 	headPos[2] = headPos[0];
@@ -36,17 +36,20 @@ void updateSnake(int dir) {
 
 	//calculate new head position
 	switch(dir) {
-		case 1:
-		headPos[1] = moveFwd(headPos[1]);
-		break;
-		case 2:
-		headPos[0] = moveFwd(headPos[0]);
-		break;
-		case 3: 
+		case 1: //up
 		headPos[1] = moveBack(headPos[1]);
 		break;
-		case 4:
+		case 2: //right
+		headPos[0] = moveFwd(headPos[0]);
+		break;
+		case 3: //down
+		headPos[1] = moveFwd(headPos[1]);
+		break;
+		case 4: //left
 		headPos[0] = moveBack(headPos[0]);
+		break;
+		default:
+		return;
 	}
 
 	//check if snake has hit the pellet
@@ -84,12 +87,25 @@ void updateSnake(int dir) {
 }
 
 int getKeyboardDir() {
-	return 1;
+    char c = getchar();
+//    printf("input: %c\n", c);
+    switch(c) {
+        case 'w':
+        return 1;
+        case 'a':
+        return 4;
+        case 's':
+        return 3;
+        case 'd':
+        return 2;
+    }
+	return -1;
 }
 
 void drawScreen() {
-	for (int x = 0; x < DIM; x++) {
-		for (int y = 0; y < DIM; y++) {
+    //should rewrite to calculate screen first, then write to console
+	for (int y = 0; y < DIM; y++) {
+		for (int x = 0; x < DIM; x++) {
 			char pixel = '#';
 			for (int i = 0; i < 3; i++) {
 				//printf("%d%d\n", snake[i][0], snake[i][1]);
@@ -110,16 +126,27 @@ int main() {
 			snake[i][e] = -1;
 		}
 	}
-	snake[0][0] = 0;
+	snake[0][0] = 3;
 	snake[0][1] = 0;
-	snake[0][2] = 0;
+	snake[0][2] = 3;
 	snake[0][3] = 0;
 
-	snake[1][0] = 1;
+	snake[1][0] = 2;
 	snake[1][1] = 0;
-	snake[1][2] = 1;
+	snake[1][2] = 2;
 	snake[1][3] = 0;
+	
+	snake[2][0] = 1;
+	snake[2][1] = 0;
+	snake[2][2] = 1;
+	snake[2][3] = 0;
 
+	for (int i = 0; i < 2; i++) {
+		for (int e = 0; e < 4; e++) {
+			printf("%d ", snake[i][e]); 	
+		}
+		printf("\n");
+	}
 /*
 	for (int i = 0; i < 10; i++) {
 		for (int e = 0; e < 4; e++) {
@@ -128,10 +155,12 @@ int main() {
 		printf("\n");
 	}
 */
+   drawScreen();
 	while (true) {
-		sleep(1);
-		updateSnake(getKeyboardDir());
-		drawScreen();
+		//sleep(1);
+		int dir = getKeyboardDir();
+		updateSnake(dir);
+        drawScreen();		
 	}
 	
 }
