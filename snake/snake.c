@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 int DIM = 8;
 int snake[64][4];
@@ -22,6 +23,29 @@ int moveFwd(int a) {
 
 int moveBack(int a) {
 	return (a - 1 + DIM) % DIM;
+}
+
+void placePellet() {
+    bool cont = true;
+    int x, y;
+    //need to check snake length < DIM^2 to avoid infinite loop
+    //though that won't really happen in a real game...
+    while (cont) {
+          cont = false;
+          int a = rand() % (DIM * DIM);
+          x = a % DIM;
+          y = a / DIM;
+          
+          for (int i = 0; i < DIM * DIM; i++) {
+                if (snake[i][0] == x && snake[i][1] == y) {
+                    cont = true;
+				    break;
+		    	}
+		  }
+    }
+    printf("pellet x=%d y=$d", x, y);
+    pellet[0] = x;
+    pellet[1] = y;
 }
 
 
@@ -49,15 +73,15 @@ void updateSnake(int dir) {
 		headPos[0] = moveBack(headPos[0]);
 		break;
 		default:
-		return;
+		return; //don't update snake if the direction is not understood
 	}
 
 	//check if snake has hit the pellet
-	/*if (headPos[0] == pellet[0] && headPos[1] == pellet[1]) {
+	if (headPos[0] == pellet[0] && headPos[1] == pellet[1]) {
 		//snake has hit a pellet, make pellet new head of snake
 		int newSnake[64][4];
 		for (int i = 0; i < 4; i++) {
-			newSnake[1][i] = headPos[i];
+			newSnake[0][i] = headPos[i];
 		}
 		
 		for (int i = 1; i < 64; i++) {
@@ -66,22 +90,24 @@ void updateSnake(int dir) {
 			}
 		}
 		memcpy(&snake, &newSnake, sizeof(newSnake));
-
-	}*/
-
-	snake[0][0] = headPos[0];
-	snake[0][1] = headPos[1];
-	snake[0][2] = headPos[2];
-	snake[0][3] = headPos[3];
-
-	for (int i = 1; i < 64; i++) {
-		if (snake[i][0] != -1) { //don't work on nonexistent snake segments
-			snake[i][2] = snake[i][0];
-			snake[i][3] = snake[i][1];
 		
-			snake[i][0] = snake[i-1][2];
-			snake[i][1] = snake[i-1][3];
-		}
+		placePellet();
+
+	} else {
+	    snake[0][0] = headPos[0];
+	    snake[0][1] = headPos[1];
+	    snake[0][2] = headPos[2];
+	    snake[0][3] = headPos[3];
+    
+	    for (int i = 1; i < 64; i++) {
+	    	if (snake[i][0] != -1) { //don't work on nonexistent snake segments
+	    		snake[i][2] = snake[i][0];
+	    		snake[i][3] = snake[i][1];
+	    	
+	    		snake[i][0] = snake[i-1][2];
+	    		snake[i][1] = snake[i-1][3];
+	    	}
+    	}
 	}
 	 
 }
@@ -103,21 +129,27 @@ int getKeyboardDir() {
 }
 
 void drawScreen() {
-    //should rewrite to calculate screen first, then write to console
-	for (int y = 0; y < DIM; y++) {
-		for (int x = 0; x < DIM; x++) {
+    int x, y;
+    char screenString[(DIM + 1) * DIM];
+	for (y = 0; y < DIM; y++) {
+		for (x = 0; x < DIM; x++) {
 			char pixel = '#';
-			for (int i = 0; i < 3; i++) {
-				//printf("%d%d\n", snake[i][0], snake[i][1]);
+			if (pellet[0] == x && pellet[1] == y) {
+					pixel = 'O';
+			}
+			for (int i = 0; i < DIM * DIM; i++) {
 				if (snake[i][0] == x && snake[i][1] == y) {
 					pixel = 'O';
 					break;
 				}
 			}
+			//screenString[y*x] = pixel;
 			printf("%c", pixel);
 		}
+		//screenString[y*(DIM+1)] = '\n';
 		printf("\n");
 	}
+	//printf(screenString);
 }
 
 int main() {
@@ -126,6 +158,9 @@ int main() {
 			snake[i][e] = -1;
 		}
 	}
+	pellet[0] = 3;
+	pellet[1] = 3;
+	
 	snake[0][0] = 3;
 	snake[0][1] = 0;
 	snake[0][2] = 3;
@@ -140,6 +175,11 @@ int main() {
 	snake[2][1] = 0;
 	snake[2][2] = 1;
 	snake[2][3] = 0;
+
+	snake[3][0] = 0;
+	snake[3][1] = 0;
+	snake[3][2] = 0;
+	snake[3][3] = 0;
 
 	for (int i = 0; i < 2; i++) {
 		for (int e = 0; e < 4; e++) {
